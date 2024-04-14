@@ -100,7 +100,7 @@ jobs:
         uses: aws-actions/amazon-ecr-push-image@v1
         with:
           source: ${{ steps.build-image.outputs.image }}
-          repository: ${{ ECR_REPOSITORY }}
+          repository: $ECR_REPOSITORY
           tag: ${{ github.sha }}
 
 

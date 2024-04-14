@@ -87,21 +87,15 @@ jobs:
         run:
           trivy image --format table -o trivy-image-report.html $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
       
-      # - name: Push Docker image to Amazon ECR
-      #   id: push-image
-        # env:
-        #   ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        # run: |
-        #   echo "Pushing Docker Image"
-        #   docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        #   echo "name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-      - name: Push Docker image to ECR
+      - name: Push Docker image to Amazon ECR
         id: push-image
-        uses: aws-actions/amazon-ecr-push-image@v1
-        with:
-          source: ${{ steps.build-image.outputs.image }}
-          repository: $ECR_REPOSITORY
-          tag: ${{ github.sha }}
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          echo "Pushing Docker Image"
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
 
 
 

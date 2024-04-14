@@ -12,6 +12,10 @@ jobs:
     defaults:
       run:
         working-directory: ./quiz-app
+    env:
+      ECR_REPOSITORY: ${{ secrets.FRONTEND_REPO }}
+      IMAGE_TAG: ${{ github.sha }}
+
     steps:
       - name: Checkout git repository
         uses: actions/checkout@v4
@@ -70,34 +74,35 @@ jobs:
 
       - name: Build Docker image
         id: build-image
+
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ secrets.FRONTEND_REPO}}
-          IMAGE_TAG: ${{github.sha}}
         run: |
           echo "Building Docker Image"
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
       
       - name: Trivy Image scan
+        env: 
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run:
           trivy image --format table -o trivy-image-report.html $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
       
-      - name: Push Docker image to Amazon ECR
-        id: push-image
+      # - name: Push Docker image to Amazon ECR
+      #   id: push-image
         # env:
         #   ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        #   ECR_REPOSITORY: ${{ secrets.FRONTEND_REPO }}
-        #   IMAGE_TAG: ${{ github.sha }}
-        run: |
-          echo "Pushing Docker Image"
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-      # - name: image push to ECR
-      #   uses: aws-actions/amazon-ecr-push-image@v1
-      #   with:
-      #     source: ${{ steps.build-image.outputs.image }}
-      #     repository: ${{ secrets.FRONTEND_REPO }}
-      #     tag: ${{ github.sha }}
+        # run: |
+        #   echo "Pushing Docker Image"
+        #   docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        #   echo "name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+      - name: Push Docker image to ECR
+        id: push-image
+        uses: aws-actions/amazon-ecr-push-image@v1
+        with:
+          source: ${{ steps.build-image.outputs.image }}
+          repository: ${{ ECR_REPOSITORY }}
+          tag: ${{ github.sha }}
+
 
 
 

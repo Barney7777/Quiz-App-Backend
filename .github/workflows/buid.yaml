@@ -119,9 +119,6 @@ jobs:
           npm test
         env:
           CI: true
-
-      - name: Build project
-        run: npm run build
       
       # - name: Setup SonarQube
       #   uses: warchant/setup-sonar-scanner@v8

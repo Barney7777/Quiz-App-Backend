@@ -94,8 +94,7 @@ jobs:
           echo "Pushing Docker Image"
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-
-jobs: 
+ 
   backend-build:
     runs-on: self-hosted
     defaults:

@@ -48,7 +48,7 @@ jobs:
     - name: Unit test
       run: npm test
   
-  vulnerability scan:
+  vulnerability-scan:
     needs: cache-dependencies
     runs-on: ubuntu-latest
     # defaults:
@@ -192,24 +192,10 @@ jobs:
         cluster: ${{ env.ECS_CLUSTER }}
         wait-for-service-stability: true
 
-      
-
-    
-    
-    
-    
-  
-  
-
-  
-    
-
-      
-
-
-
-
-    
-      
-    
-
+# # Define a reusable step for Trivy installation
+# trivy-installation:
+#   runs-on: ubuntu-latest
+#   steps:
+#   - name: Install Trivy
+#     run: |
+#       curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin

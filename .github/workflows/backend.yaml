@@ -182,6 +182,10 @@ jobs:
     - name: Download task task-definition
       run: |
         aws ecs describe-task-definition --task-definition ${{ env.ECS_TASK_DEFINITION }} --query taskDefinition > task-definition.json
+    
+    - name: Debug
+      run: |
+        echo "${needs.build.outputs.IMAGE}"
 
     - name: update the existing task definition with new image
       id: new-task-def

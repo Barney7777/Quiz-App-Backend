@@ -159,7 +159,7 @@ jobs:
       ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com
       ECR_REPOSITORY: ${{ secrets.Backend_REPO }}
       IMAGE_TAG: ${{ github.sha }}
-      IMAGE: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+      # IMAGE: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
     steps:
     - name: Configure AWS Credentials
@@ -179,7 +179,7 @@ jobs:
       with:
         task-definition: task-definition.json
         container-name: ${{ env.ECS_CONTAINER_NAME }}
-        image: ${{ env.IMAGE }}
+        image: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/${{ secrets.BACKEND_REPO }}:${{ github.sha }}
 
     - name: Deploy to ECS
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1

@@ -100,7 +100,7 @@ jobs:
         path: trivy-fs-results.html
 
   build:
-    needs: vulnerability scan
+    needs: vulnerability-scan
     runs-on: ubuntu-latest
     env:
       ECR_REPOSITORY: ${{ secrets.Backend_REPO }}

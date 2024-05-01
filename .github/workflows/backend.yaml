@@ -105,7 +105,7 @@ jobs:
     env:
       ECR_REPOSITORY: ${{ secrets.Backend_REPO }}
       IMAGE_TAG: ${{ github.sha }}
-      ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com
+      AWS_DEFAULT_REGION: ap-southeast-2
 
     steps:
     - name: Checkout
@@ -122,11 +122,15 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+        aws-region: ${{ env.AWS_DEFAULT_REGION }}
 
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Set ECR_REGISTRY env var
+      run: |
+        echo "ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}" >> $GITHUB_ENV
     
     - name: Build Docker Image
       id: build-image
@@ -147,6 +151,13 @@ jobs:
       run: |
         echo "Pushing Docker Image"
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+    
+    - name: Set IMAGE env var
+      run: |
+        echo "IMAGE=${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}" >> $GITHUB_ENV
+  outputs:
+    ECR_REGISTRY: ${{ env.ECR_REGISTRY }}
+    IMAGE: ${{ env.IMAGE }}
   
   deploy:
     needs: build
@@ -157,27 +168,15 @@ jobs:
       ECS_TASK_DEFINITION: quiz-app-dev-td
       ECS_CONTAINER_NAME: quiz-app-dev-container
       AWS_DEFAULT_REGION: ap-southeast-2
-      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-      # ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ AWS_DEFAULT_REGION }}.amazonaws.com
-      ECR_REPOSITORY: ${{ secrets.Backend_REPO }}
-      IMAGE_TAG: ${{ github.sha }}
-      # IMAGE: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
     steps:
+
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_DEFAULT_REGION }}
-    
-    - name: Set ECR_REGISTRY env var
-      run: |
-        echo "ECR_REGISTRY=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com" >> $GITHUB_ENV
-
-    - name: Set IMAGE env var
-      run: |
-        echo "IMAGE=${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}" >> $GITHUB_ENV
     
     - name: Download task task-definition
       run: |
@@ -189,7 +188,7 @@ jobs:
       with:
         task-definition: task-definition.json
         container-name: ${{ env.ECS_CONTAINER_NAME }}
-        image: ${{ env.IMAGE }}
+        image: ${{ needs.build.outputs.IMAGE }}
 
     - name: Deploy to ECS
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1

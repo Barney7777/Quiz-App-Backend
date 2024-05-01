@@ -185,7 +185,7 @@ jobs:
     
     - name: Debug
       run: |
-        echo "${needs.build.outputs.IMAGE}"
+        echo "Docker Image URL: ${{ needs.build.outputs.IMAGE }}"
 
     - name: update the existing task definition with new image
       id: new-task-def

@@ -51,7 +51,7 @@ jobs:
   vulnerability scan:
     needs: cache-dependencies
     runs-on: ubuntu-latest
-    defaults:
+    # defaults:
       # run:
       #   working-directory: ./
     strategy:

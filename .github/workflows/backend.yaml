@@ -152,7 +152,8 @@ jobs:
       run: |
         echo "Pushing Docker Image"
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        echo "name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+    outputs:
+      image: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
   
   deploy:
     needs: build

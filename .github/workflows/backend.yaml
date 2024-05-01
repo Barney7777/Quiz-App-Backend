@@ -153,8 +153,8 @@ jobs:
         echo "Pushing Docker Image"
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
     outputs:
-      image: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-      ecr-registry: ${{ steps.login-ecr.outputs.registry }}
+      image: ${{ steps.login-ecr.outputs.registry }}/${{ ECR_REPOSITORY }}:${{ IMAGE_TAG }}
+      # ecr-registry: ${{ steps.login-ecr.outputs.registry }}
   
   deploy:
     needs: build
@@ -164,9 +164,10 @@ jobs:
       ECS_CLUSTER: quiz-app-dev-ecs-cluster
       ECS_TASK_DEFINITION: quiz-app-dev-td
       ECS_CONTAINER_NAME: quiz-app-dev-container
-      ECR_REGISTRY: ${{ needs.build.outputs.ecr-registry }} # we cannot directly access the steps of a job, Instead, We can only access outputs from a job, similiar with outputs in terraform modules
+      # ECR_REGISTRY: ${{ needs.build.outputs.ecr-registry }} # we cannot directly access the steps of a job, Instead, We can only access outputs from a job, similiar with outputs in terraform modules
       ECR_REPOSITORY: ${{ secrets.Backend_REPO }}
       IMAGE_TAG: ${{ github.sha }}
+      IMAGE: ${{ needs.build.outputs.image }}
 
     steps:
     - name: Configure AWS Credentials
@@ -186,7 +187,7 @@ jobs:
       with:
         task-definition: task-definition.json
         container-name: ${{ env.ECS_CONTAINER_NAME }}
-        image: ${{ needs.build.outputs.image }}
+        image: ${{ env.IMAGE }}
 
     - name: Deploy to ECS
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1

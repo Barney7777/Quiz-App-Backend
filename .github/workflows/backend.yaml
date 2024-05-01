@@ -9,6 +9,14 @@ on:
       - main
 
 jobs:
+  # # Define a reusable step for Trivy installation
+  # trivy-installation:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - name: Install Trivy
+  #     run: |
+  #       curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+
   cache-dependencies:
     runs-on: ubuntu-latest
     # defaults:
@@ -69,35 +77,35 @@ jobs:
       if: steps.cache.outputs.cache-hit != 'true'
       run: npm i
 
-    # - name: Setup SonarQube
-    #   uses: warchant/setup-sonar-scanner@v8
-    # - name: SAST with SonarCloud
-    #   uses: sonarsource/sonarcloud-github-action@master
-    #   env: 
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-    #   with:
-    #     # projectBaseDir: .
-    #     args: >
-    #       -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
-    #       -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
-    #       -Dsonar.host.url=${{ secrets.SONAR_URL }}
-    #       -Dsonar.login=${{ secrets.SONAR_TOKEN }}
-    #       -Dsonar.sources=.
-    #       -Dsonar.verbose=true
+    - name: Setup SonarQube
+      uses: warchant/setup-sonar-scanner@v8
+    - name: SAST with SonarCloud
+      uses: sonarsource/sonarcloud-github-action@master
+      env: 
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      with:
+        # projectBaseDir: .
+        args: >
+          -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+          -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+          -Dsonar.host.url=${{ secrets.SONAR_URL }}
+          -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+          -Dsonar.sources=.
+          -Dsonar.verbose=true
 
-    # - name: Install Trivy
-    #   run: |
-    #     curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
-    # - name: Trivy FS Scan
-    #   run: |
-    #     echo "Scanning File"
-    #     trivy fs --format table -o trivy-fs-results.html .
-    # - name: Archive Trivy FS Scan Results
-    #   uses: actions/upload-artifact@v4
-    #   with: 
-    #     name: trivy-fs-results.html
-    #     path: trivy-fs-results.html
+    - name: Install Trivy
+      run: |
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+    - name: Trivy FS Scan
+      run: |
+        echo "Scanning File"
+        trivy fs --format table -o trivy-fs-results.html .
+    - name: Archive Trivy FS Scan Results
+      uses: actions/upload-artifact@v4
+      with: 
+        name: trivy-fs-results.html
+        path: trivy-fs-results.html
 
   build:
     needs: vulnerability-scan
@@ -138,13 +146,18 @@ jobs:
         echo "Building Docker Inage"
         docker build --build-arg MONGO_URI="${{ secrets.MONGO_URI }}" -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
     
-    # - name: Install Trivy
-    #   run: |
-    #     curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
-    # - name: Trivy Image Scan
-    #   run: |
-    #     echo "Scanning Docker Image"
-    #     trivy image --format table -o trivy-image-report.html $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+    - name: Install Trivy
+      run: |
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+    - name: Trivy Image Scan
+      run: |
+        echo "Scanning Docker Image"
+        trivy image --format table -o trivy-image-report.html $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+    - name: Archive Trivy Image Scan Results
+      uses: actions/upload-artifact@v4
+      with:
+        name: trivy-image-report.html
+        path: trivy-image-report.html
 
     - name: Push Docker Image To Amazon ECR
       id: push-image
@@ -208,11 +221,13 @@ jobs:
         service: ${{ env.ECS_SERVICE }}
         cluster: ${{ env.ECS_CLUSTER }}
         wait-for-service-stability: true
-
-# # Define a reusable step for Trivy installation
-# trivy-installation:
-#   runs-on: ubuntu-latest
-#   steps:
-#   - name: Install Trivy
-#     run: |
-#       curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+    
+    - name: Send a Slack Notification
+      if: always()
+      uses: act10ns/slack@v2.0.0
+      with:
+        status: ${{ job.status }}
+        steps: ${{ toJson(steps) }}
+        channel: 'react-app'
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

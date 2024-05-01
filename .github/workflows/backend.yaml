@@ -179,8 +179,8 @@ jobs:
 
     - name: Debug Docker Image URI
       run: 
-        echo "Docker Image URI: ${{ needs.build.outputs.image }}"
-        
+        echo "${{ needs.build.outputs.image }}"
+
     - name: update the existing task definition with new image
       id: new-task-def
       uses: aws-actions/amazon-ecs-render-task-definition@v1

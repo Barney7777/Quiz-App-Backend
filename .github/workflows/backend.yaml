@@ -177,6 +177,10 @@ jobs:
       run: |
         aws ecs describe-task-definition --task-definition ${{ env.ECS_TASK_DEFINITION }} --query taskDefinition > task-definition.json
 
+    - name: Debug Docker Image URI
+      run: 
+        echo "Docker Image URI: ${{ needs.build.outputs.image }}"
+        
     - name: update the existing task definition with new image
       id: new-task-def
       uses: aws-actions/amazon-ecs-render-task-definition@v1
@@ -184,6 +188,8 @@ jobs:
         task-definition: task-definition.json
         container-name: ${{ env.ECS_CONTAINER_NAME }}
         image: ${{ needs.build.outputs.image }}
+
+
 
     - name: Deploy to ECS
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1

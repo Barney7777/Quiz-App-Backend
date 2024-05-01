@@ -126,7 +126,7 @@ jobs:
       uses: docker/setup-buildx-action@v3
 
     - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v1
+      uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -134,7 +134,7 @@ jobs:
 
     - name: Login to Amazon ECR
       id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
+      uses: aws-actions/amazon-ecr-login@v2
 
     - name: Set ECR_REGISTRY env var
       run: |
@@ -188,7 +188,8 @@ jobs:
     steps:
 
     - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v1
+      id: config-aws-cre
+      uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -196,7 +197,7 @@ jobs:
 
     - name: Login to Amazon ECR
       id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
+      uses: aws-actions/amazon-ecr-login@v2
     
     - name: Download task task-definition
       run: |
@@ -216,6 +217,7 @@ jobs:
 
     - name: Deploy to ECS
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      id: new-svc-dep
       with:
         task-definition: ${{ steps.new-task-def.outputs.task-definition }}
         service: ${{ env.ECS_SERVICE }}

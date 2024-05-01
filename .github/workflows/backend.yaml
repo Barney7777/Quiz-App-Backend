@@ -156,7 +156,8 @@ jobs:
       ECS_CLUSTER: quiz-app-dev-ecs-cluster
       ECS_TASK_DEFINITION: quiz-app-dev-td
       ECS_CONTAINER_NAME: quiz-app-dev-container
-      ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com
+      AWS_DEFAULT_REGION: ap-southeast-2
+      ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_DEFAULT_REGION }}.amazonaws.com
       ECR_REPOSITORY: ${{ secrets.Backend_REPO }}
       IMAGE_TAG: ${{ github.sha }}
       # IMAGE: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
@@ -176,10 +177,12 @@ jobs:
     - name: update the existing task definition with new image
       id: new-task-def
       uses: aws-actions/amazon-ecs-render-task-definition@v1
+      env:
+        IMAGE: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ IMAGE_TAG }}
       with:
         task-definition: task-definition.json
         container-name: ${{ env.ECS_CONTAINER_NAME }}
-        image: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/${{ secrets.BACKEND_REPO }}:${{ github.sha }}
+        image: ${{ env.IMAGE }}
 
     - name: Deploy to ECS
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1

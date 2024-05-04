@@ -11,10 +11,16 @@ const port = 3000;
 require("dotenv").config();
 
 // Middleware
-app.use(cors()); // Use this to allow cross-origin requests
+// Allow requests from specific origin
+app.use(cors({
+  origin: "https://barneywang.click",
+  // You can specify more origins if needed:
+  // origin: ["https://barneywang.click", "https://www.barneywang.click"]
+}));
+// app.use(cors()); // Use this to allow cross-origin requests
 app.use(express.json()); // For parsing application/json
-// app.use(helmet()); // Use helmet to set secure HTTP headers
-// app.use(cookieParser()); // Use cookie-parser middleware
+// // app.use(helmet()); // Use helmet to set secure HTTP headers
+// // app.use(cookieParser()); // Use cookie-parser middleware
 
 // // CSRF protection
 // const csrfProtection = csrf({ cookie: true });
